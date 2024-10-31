@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books API Example</title>
+    <script>
+        // Define the server's URL, pointing to your Flask backend
+        const server = 'http://YOUR-FLASK-SERVER-URL';
+
+        function handleResponse(response) {
+            var contentDiv = document.getElementById("content");
+            contentDiv.innerHTML = "";  // Clear previous results
+
+            console.log(response); // Log the response to check its structure
+
+            if (response.items) {
+                for (var i = 0; i < response.items.length; i++) {
+                    var item = response.items[i];
+                    contentDiv.innerHTML += `<div class="book-result">
+                                                <h3>${item.volumeInfo.title}</h3>
+                                                <p>${item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author'}</p>
+                                                <p>${item.volumeInfo.description ? item.volumeInfo.description : 'No description available'}</p>
+                                             </div>`;
+                }
+            } else {
+                contentDiv.innerHTML = "<p>No results found.</p>";
+            }
+        }
+
+        async function searchBooks() {
+            const query = document.getElementById("query").value;
+            console.log(`Searching for: ${query}`); // Log the search query
+
+            try {
+                const response = await fetch(`${server}/search?query=${query}`);
+                const data = await response.json();
+                handleResponse(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while fetching results');
+            }
+        }
+    </script>
+    <style>
+        .book-result {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Books API Example</h1>
+    <input type="text" id="query" placeholder="Enter book name" />
+    <button onclick="searchBooks()">Search</button>
+    <div id="content"></div>
+</body>
+</html>
