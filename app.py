@@ -9,14 +9,20 @@ app = Flask(__name__)
 # Load environment variables from .env file
 load_dotenv()
 CORS(app)
-# Route to serve the HTML page
 
 
 # Backend route to call Google Books API
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     query = request.args.get('query')  # Get the query from the search form
-    google_books_api_key = os.getenv('API_KEY')  # Get API key from environment variable
+
+    secret_name = "reading_test_key"
+    region_name = "us-east-1"
+    session = boto3.session.Session()
+    client = session.client(service_name='secretsmanager', region_name=region_name)
+    get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+    google_books_api_key = json.loads(get_secret_value_response['SecretString'])['googlebooks']
+    
     google_books_api = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={google_books_api_key}"
     
     response = requests.get(google_books_api)
