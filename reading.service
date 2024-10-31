@@ -3,6 +3,6 @@ Description=Launch the Reading Flask server
 After=network-online.target
 Wants=network-online.target
 [Service]
-ExecStart=/home/ec2-user/reading-tracker/.venv/bin/gunicorn --chdir /home/ec2-user/reading-tracker --bind 0.0.0.0:8080 "app:app"
+ExecStart=/home/ec2-user/reading-tracker/.venv/bin/gunicorn --chdir /home/ec2-user/reading-tracker --bind 0.0.0.0:8080 "app:launch_app()"
 [Install]
 WantedBy=multi-user.target
