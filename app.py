@@ -3,6 +3,8 @@ import requests
 from dotenv import load_dotenv
 import os
 from flask_cors import CORS
+import boto3
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 
