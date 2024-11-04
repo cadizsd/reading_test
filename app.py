@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 import boto3
+from botocore.exceptions import ClientError
 import json
-from dynamo_shelf import DynamoDBShelf
 
 app = Flask(__name__)
 
@@ -13,7 +13,9 @@ app = Flask(__name__)
 load_dotenv()
 CORS(app)
 
-shelf = DynamoDBShelf()  # Instantiate the DynamoDBShelf class
+# Initialize DynamoDB
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+shelf = dynamodb.Table('bookshelf')  # Ensure this matches your DynamoDB table name
 
 # Backend route to call Google Books API
 @app.route('/search', methods=['GET', 'POST'])
@@ -33,25 +35,31 @@ def search():
     data = response.json()
     return jsonify(data)  # Return Google Books API data as JSON to frontend
 
+# Endpoint to save a book to DynamoDB
 @app.route('/save_book', methods=['POST'])
 def save_book():
-    book_data = request.get_json()
-    
-    book_id = book_data.get("book_id")
-    title = book_data.get("title")
-    author = book_data.get("author", "Unknown Author")
-    page_count = book_data.get("page_count", 0)
-    isbn = book_data.get("isbn", "N/A")
+    data = request.get_json()
+    try:
+        shelf.put_item(
+            Item={
+                'ISBN': data['ISBN'],
+                'Title': data['Title'],
+                'Author': data['Author'],
+                'PageCount': data['PageCount'],
+            }
+        )
+        return jsonify({'message': 'Book saved successfully!'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    result = shelf.save_book(book_id, title, author, page_count, isbn)
-    return jsonify(result)
-
-@app.route('/get_books', methods=['GET'])
-def get_books():
-    response = shelf.table.scan()  # Scan the bookshelf table
-    return jsonify(response.get('Items', []))  # Return the items or an empty list if none
-
-
+# Endpoint to retrieve shelved books
+@app.route('/shelved_books', methods=['GET'])
+def shelved_books():
+    try:
+        response = shelf.scan()  # Scan the bookshelf table
+        return jsonify(response['Items'])  # Return the items in JSON format
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
