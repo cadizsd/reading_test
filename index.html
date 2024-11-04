@@ -5,33 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Books API Example</title>
     <script>
-        // Define the server's URL, pointing to your Flask backend
-        const server = 'http://YOUR-FLASK-SERVER-URL';
+        const server = 'http://YOUR-FLASK-SERVER-URL:8080';  // Replace with your actual server URL
 
+        // Function to display the search results on the page
         function handleResponse(response) {
             var contentDiv = document.getElementById("content");
             contentDiv.innerHTML = "";  // Clear previous results
 
-            console.log(response); // Log the response to check its structure
-
             if (response.items) {
-                for (var i = 0; i < response.items.length; i++) {
-                    var item = response.items[i];
+                response.items.forEach(item => {
+                    const book_id = item.id;
+                    const title = item.volumeInfo.title;
+                    const authors = item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author';
+                    const pageCount = item.volumeInfo.pageCount || 0;
+                    const isbn = item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0].identifier : "N/A";
+                    const description = item.volumeInfo.description || "No description available";
+
                     contentDiv.innerHTML += `<div class="book-result">
-                                                <h3>${item.volumeInfo.title}</h3>
-                                                <p>${item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author'}</p>
-                                                <p>${item.volumeInfo.description ? item.volumeInfo.description : 'No description available'}</p>
-                                             </div>`;
-                }
+                        <h3>${title}</h3>
+                        <p><strong>Author(s):</strong> ${authors}</p>
+                        <p><strong>Page Count:</strong> ${pageCount}</p>
+                        <p><strong>ISBN:</strong> ${isbn}</p>
+                        <p><strong>Description:</strong> ${description}</p>
+                        <button onclick="saveBook('${book_id}', '${title}', '${authors}', ${pageCount}, '${isbn}', '${description}')">Save to Bookshelf</button>
+                    </div>`;
+                });
             } else {
                 contentDiv.innerHTML = "<p>No results found.</p>";
             }
         }
 
+        // Function to fetch book search results from the Flask backend
         async function searchBooks() {
             const query = document.getElementById("query").value;
-            console.log(`Searching for: ${query}`); // Log the search query
-
             try {
                 const response = await fetch(`${server}/search?query=${query}`);
                 const data = await response.json();
@@ -39,6 +45,22 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred while fetching results');
+            }
+        }
+
+        // Function to save a selected book to DynamoDB
+        async function saveBook(book_id, title, author, pageCount, isbn, description) {
+            try {
+                const response = await fetch(`${server}/save_book`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book_id, title, author, page_count: pageCount, isbn, description })
+                });
+                const data = await response.json();
+                alert(data.message || data.error);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving the book');
             }
         }
     </script>
