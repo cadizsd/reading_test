@@ -38,7 +38,7 @@ DynamoDB Table Creation
 Your application will automatically create the bookshelf table when the dynamo_shelf.py script is executed. Here’s a simplified structure for your table:
 ```
 {
-  "ISBN": "1234567890",
+  "BookID": "1234567890",
   "Title": "Example Book Title",
   "Author": "Author Name",
   "PageCount": 250
