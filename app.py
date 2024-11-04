@@ -41,7 +41,7 @@ def save_book():
     try:
         shelf.put_item(
             Item={
-                'ISBN': data['ISBN'],
+                'BookID': data['ISBN'],
                 'Title': data['Title'],
                 'Author': data['Author'],
                 'PageCount': data['PageCount'],
