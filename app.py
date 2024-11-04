@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 import boto3
-from botocore.exceptions import ClientError
 import json
 
 app = Flask(__name__)
@@ -46,6 +45,7 @@ def save_book():
                 'Title': data['Title'],
                 'Author': data['Author'],
                 'PageCount': data['PageCount'],
+                # Remove description from being saved
             }
         )
         return jsonify({'message': 'Book saved successfully!'}), 201
@@ -63,6 +63,8 @@ def shelved_books():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
+
 
 
 
