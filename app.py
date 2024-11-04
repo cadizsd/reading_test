@@ -46,13 +46,11 @@ def save_book():
     result = shelf.save_book(book_id, title, author, page_count, isbn)
     return jsonify(result)
 
-@app.route('/saved_books', methods=['GET'])
-def saved_books():
-    try:
-        response = shelf.table.scan()  # Scan the bookshelf table
-        return jsonify(response['Items'])  # Return the items in JSON format
-    except Exception as e:
-        return jsonify({'error': str(e)})
+@app.route('/get_books', methods=['GET'])
+def get_books():
+    response = shelf.table.scan()  # Scan the bookshelf table
+    return jsonify(response.get('Items', []))  # Return the items or an empty list if none
+
 
 
 if __name__ == "__main__":
