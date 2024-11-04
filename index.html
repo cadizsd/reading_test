@@ -6,7 +6,7 @@
     <title>Books API Example</title>
     <script>
         // Define the server's URL, pointing to your Flask backend
-        const server = 'http://YOUR-FLASK-SERVER-URL';  // Update with your Flask server URL
+        const server = 'http://54.163.222.194:8080';  // Update with your Flask server URL
 
         function handleResponse(response) {
             var contentDiv = document.getElementById("content");
@@ -19,9 +19,10 @@
                     var item = response.items[i];
                     contentDiv.innerHTML += `<div class="book-result">
                                                 <h3>${item.volumeInfo.title}</h3>
-                                                <p>${item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author'}</p>
-                                                <p>${item.volumeInfo.pageCount ? item.volumeInfo.pageCount : 'No page count available'}</p>
-                                                <p>${item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0].identifier : 'No ISBN available'}</p>
+                                                <p><strong>Author(s):</strong> ${item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author'}</p>
+                                                <p><strong>Page Count:</strong> ${item.volumeInfo.pageCount ? item.volumeInfo.pageCount : 'No page count available'}</p>
+                                                <p><strong>Description:</strong> ${item.volumeInfo.description ? item.volumeInfo.description : 'No description available'}</p>
+                                                <p><strong>ISBN:</strong> ${item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0].identifier : 'No ISBN available'}</p>
                                                 <button onclick="saveBook('${item.volumeInfo.title}', '${item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author'}', ${item.volumeInfo.pageCount}, '${item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0].identifier : 'No ISBN available'}')">Save Book</button>
                                              </div>`;
                 }
@@ -49,7 +50,7 @@
                 Title: title,
                 Author: author,
                 PageCount: pageCount,
-                ISBN: isbn
+                ISBN: isbn,
             };
 
             try {
@@ -81,7 +82,7 @@
                 shelvedBooksDiv.innerHTML = "";  // Clear previous shelved books
 
                 if (books.length > 0) {
-                    let table = `<table border="1"><tr><th>Title</th><th>Author</th><th>Page Count</th><th>ISBN</th></tr>`;
+                    let table = `<table border="1" style="width: 100%; text-align: left;"><tr><th>Title</th><th>Author</th><th>Page Count</th><th>ISBN</th></tr>`;
                     books.forEach(book => {
                         table += `<tr>
                                     <td>${book.Title}</td>
