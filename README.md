@@ -17,7 +17,7 @@ aws ec2 run-instances --image-id ami-06b21ccaeff8cd686 --instance-type t2.micro 
 ```
 
 Changes to the Server
-This version of the application interacts with a DynamoDB table to store book information instead of using Redis. Make sure to create a DynamoDB table named bookshelf with the following configuration:
+This version of the application interacts with a DynamoDB table to store book information. Make sure to create a DynamoDB table named bookshelf with the following configuration:
 
 Table name: bookshelf
 Partition key: ISBN (String)
@@ -49,18 +49,27 @@ EC2 User Data Script
 Your userdata.sh script should look similar to this:
 ```
 #!/bin/bash
-yum update -y
-yum install python3 -y
-pip3 install boto3 flask flask-cors python-dotenv requests
+# Install Git
+sudo yum install -y git
 
-# Clone your repository
-git clone https://github.com/cadizsd/reading_test.git
+# Clone the repository
+git clone https://github.com/cadizsd/reading_test.git /home/ec2-user/reading_test
 
-# Change directory to the cloned repository
-cd reading_test
+# Move to the repository directory
+cd /home/ec2-user/reading_test || exit
 
-# Run your application
-python3 dynamo_shelf.py
+# Set up the Python virtual environment
+sudo python3 -m venv .venv
+source .venv/bin/activate
+
+# Install required dependencies
+.venv/bin/pip install -r requirements.txt
+
+# Copy the service file and enable the service
+sudo cp reading.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl enable reading
+sudo systemctl start reading
 ```
 
 This script installs the necessary dependencies and starts your Flask application upon instance launch.
@@ -74,4 +83,4 @@ Monitor the deployment log:
 ```
 tail -f /var/log/cloud-init-output.log
 ```
-Once the instance is up and running, you should be able to access your application via the public IP address of your EC2 instance at http://<instance-IP>:8080.
+Once the instance is up and running, you should be able to access your application via the s3 bucket URL.
