@@ -1,77 +1,72 @@
-# reading_test
-# EC2 Instance Setup and Web App Deployment
+Book Shelf API
+Overview
+This project implements a web application where users can search for books using the Google Books API and store selected books in a DynamoDB table. The application serves a frontend hosted in an S3 bucket and a Flask backend running on an EC2 instance.
 
-This README outlines the steps to manually create an EC2 instance, launch the application using a user data script, update the S3 bucket with the latest public IP, and access the web app.
+Launch the API
+To launch the Flask API, ensure that your EC2 instance has a security group that allows HTTP (port 8080) and SSH (port 22) access. You can verify your security groups using the AWS CLI:
 
-## Steps to Deploy the Web App
+bash
+Copy code
+aws ec2 describe-security-groups
+To create and launch the EC2 instance with the appropriate IAM role and user data for installing the necessary dependencies and running your application, use the following command:
 
-### 1. Create EC2 Instance
+bash
+Copy code
+aws ec2 run-instances --image-id ami-06b21ccaeff8cd686 --instance-type t2.micro --key-name vockey --security-groups httpssh --user-data file://userdata.sh --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=book_shelf_api}]' --iam-instance-profile Name=LabInstanceProfile
+Changes to the Server
+This version of the application interacts with a DynamoDB table to store book information instead of using Redis. Make sure to create a DynamoDB table named bookshelf with the following configuration:
 
-1. **Log in to the AWS Management Console** and navigate to the EC2 Dashboard.
-2. Click on **"Launch Instance."**
-3. Choose an **Amazon Machine Image (AMI)**:
-   - Select `Amazon Linux 2 AMI (HVM), SSD Volume Type`.
-4. Choose an **Instance Type**:
-   - Select `t2.micro`.
-5. Configure Instance Details:
-   - Ensure your VPC and subnet settings are correct.
-   - Optionally, enable Auto-assign Public IP.
-6. **Add Storage**:
-   - Use the default settings or adjust as needed.
-7. **Add Tags**:
-   - Tag your instance with a name, e.g., `reading_script`.
-8. **Configure Security Group**:
-   - Create or select a security group that includes rules for:
-     - SSH (port 22) from your IP
-     - HTTP (port 80) and HTTPS (port 443) for the web application.
-     - Include an additional rule for the `readingtracker-http` security group.
-9. **Review and Launch**:
-   - Review your settings and click on **"Launch."**
-   - Select or create a new key pair (e.g., `vockey`) and download the key.
+Table name: bookshelf
+Partition key: ISBN (String)
+All other settings can be kept as default.
 
-### 2. Use User Data to Launch Application
+Update the Static Webpage
+In your index.html, ensure that the JavaScript variable server points to your Flask API running on the EC2 instance. This variable should be set as follows:
 
-1. In the **"Configure Instance"** section during launch, find the **"User Data"** field.
-2. Paste the contents of your `userdata.sh` script. This script will:
-   - Install Git and clone the repository.
-   - Set up a Python virtual environment.
-   - Install necessary dependencies.
-   - Start the Flask application service.
+javascript
+Copy code
+const server = 'http://YOUR-EC2-INSTANCE-IP:8080';
+After updating the IP address, upload the modified index.html file to your S3 bucket:
 
-### 3. Retrieve the EC2 Public IP Address
+bash
+Copy code
+aws s3 cp index.html s3://<your-s3-bucket-name>
+DynamoDB Table Creation
+Your application will automatically create the bookshelf table when the dynamo_shelf.py script is executed. Here’s a simplified structure for your table:
 
-1. Once the instance is running, go to the **Instances** section of the EC2 Dashboard.
-2. Select your instance and find the **Public IPv4 address** listed in the instance details.
+json
+Copy code
+{
+  "ISBN": "1234567890",
+  "Title": "Example Book Title",
+  "Author": "Author Name",
+  "PageCount": 250
+}
+EC2 User Data Script
+Your userdata.sh script should look similar to this:
 
-### 4. Update `index.html` in the S3 Bucket Using Cloud9
+bash
+Copy code
+#!/bin/bash
+yum update -y
+yum install python3 -y
+pip3 install boto3 flask flask-cors python-dotenv requests
 
-1. **Open AWS Cloud9**:
-   - Navigate to the Cloud9 service in the AWS Management Console and open your existing environment.
-2. **Clone the Repository**:
-   - In the Cloud9 terminal, clone your repository with the following command:
-     ```bash
-     git clone https://github.com/cadizsd/reading_test.git
-     ```
-3. **Navigate to the Project Directory**:
-   - Change to the directory where the repository was cloned:
-     ```bash
-     cd reading_test
-     ```
-4. **Edit the `index.html` File**:
-   - Open the `index.html` file in the Cloud9 editor and update the relevant line to include the latest public IP address:
-     ```html
-     <script>
-         const server = 'http://<YOUR_PUBLIC_IP>:8080';
-     </script>
-     ```
-   - Replace `<YOUR_PUBLIC_IP>` with the actual public IP you retrieved from the EC2 instance.
-5. **Copy the Updated `index.html` to the S3 Bucket**:
-   - Use the following command in the Cloud9 terminal to copy the updated file to your S3 bucket:
-     ```bash
-     aws s3 cp index.html s3://readingtracker-cadiz --acl public-read
-     ```
+# Clone your repository
+git clone https://github.com/cadizsd/reading_test.git
 
-### 5. Access the Web App
+# Change directory to the cloned repository
+cd reading_test
 
-You can access the web app using the S3 bucket URL. The URL will typically be in the format:
+# Run your application
+python3 dynamo_shelf.py
+This script installs the necessary dependencies and starts your Flask application upon instance launch.
 
+Verify the Setup
+After launching your instance and running the user data script, you can connect to your instance via SSH to check the logs and ensure everything is running smoothly:
+
+bash
+Copy code
+ssh -i ~/.ssh/vockey.pem ec2-user@<instance-IP>
+tail -f /var/log/cloud-init-output.log
+Once the instance is up and running, you should be able to access your application via the public IP address of your EC2 instance at http://<instance-IP>:8080.
