@@ -1,4 +1,3 @@
-Book Shelf API
 Overview
 This project implements a web application where users can search for books using the Google Books API and store selected books in a DynamoDB table. The application serves a frontend hosted in an S3 bucket and a Flask backend running on an EC2 instance.
 
@@ -21,12 +20,12 @@ Partition key: ISBN (String)
 All other settings can be kept as default.
 
 Update the Static Webpage
-In your index.html, ensure that the JavaScript variable server points to your Flask API running on the EC2 instance. This variable should be set as follows:
+The JavaScript in index.html uses the variable server to know where to get the API. This variable should be declared as follows:
 
 javascript
 Copy code
 const server = 'http://YOUR-EC2-INSTANCE-IP:8080';
-After updating the IP address, upload the modified index.html file to your S3 bucket:
+After you add the IP address, upload the modified index.html file to your S3 bucket:
 
 bash
 Copy code
@@ -68,5 +67,10 @@ After launching your instance and running the user data script, you can connect 
 bash
 Copy code
 ssh -i ~/.ssh/vockey.pem ec2-user@<instance-IP>
+Monitor the deployment log:
+
+bash
+Copy code
 tail -f /var/log/cloud-init-output.log
 Once the instance is up and running, you should be able to access your application via the public IP address of your EC2 instance at http://<instance-IP>:8080.
+
