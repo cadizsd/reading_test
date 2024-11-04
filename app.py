@@ -1,10 +1,13 @@
-import boto3
 from flask import Flask, jsonify, request
 import requests
 from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 import json
+import boto3
+
+# Import the DynamoDBShelf class
+from dynamo_shelf import DynamoDBShelf  # Assuming your class is saved in dynamo_shelf.py
 
 app = Flask(__name__)
 
@@ -12,9 +15,8 @@ app = Flask(__name__)
 load_dotenv()
 CORS(app)
 
-# Initialize DynamoDB
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-shelf = dynamodb.Table('bookshelf')  # Ensure this matches your DynamoDB table name
+# Initialize DynamoDBShelf
+shelf = DynamoDBShelf()  # This initializes the bookshelf table
 
 # Backend route to call Google Books API
 @app.route('/search', methods=['GET', 'POST'])
@@ -43,30 +45,30 @@ def save_book():
     if not data.get('BookID') or data['BookID'] == 'No ISBN available':
         return jsonify({'error': 'Cannot save book without a valid ISBN.'}), 400
 
-    try:
-        shelf.put_item(
-            Item={
-                'BookID': data['BookID'],  # Ensure BookID is ISBN
-                'Title': data['Title'],
-                'Author': data['Author'],
-                'PageCount': data['PageCount']
-            }
-        )
-        return jsonify({'message': 'Book saved successfully!'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    # Use DynamoDBShelf's save_book method
+    result = shelf.save_book(
+        title=data['Title'],
+        author=data['Author'],
+        page_count=data['PageCount'],
+        isbn=data['BookID']
+    )
+
+    if 'error' in result:
+        return jsonify(result), 500
+    return jsonify(result), 201
 
 # Endpoint to retrieve shelved books
 @app.route('/shelved_books', methods=['GET'])
 def shelved_books():
     try:
-        response = shelf.scan()  # Scan the bookshelf table
+        response = shelf.table.scan()  # Scan the bookshelf table
         return jsonify(response['Items'])  # Return the items in JSON format
     except Exception as e:
         return jsonify({'error': str(e)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
