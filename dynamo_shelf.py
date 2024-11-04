@@ -5,7 +5,7 @@ import boto3
 class DynamoDBShelf:
     def __init__(self):
         dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-        self.table = dynamodb.Table('Bookshelf')
+        self.table = dynamodb.Table('bookshelf')
 
     def save_book(self, book_id, title, author, page_count, isbn):
         try:
