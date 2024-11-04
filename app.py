@@ -1,9 +1,9 @@
+import boto3
 from flask import Flask, jsonify, request
 import requests
 from dotenv import load_dotenv
 import os
 from flask_cors import CORS
-import boto3
 import json
 
 app = Flask(__name__)
@@ -38,14 +38,18 @@ def search():
 @app.route('/save_book', methods=['POST'])
 def save_book():
     data = request.get_json()
+
+    # Check if ISBN is provided
+    if not data.get('BookID') or data['BookID'] == 'No ISBN available':
+        return jsonify({'error': 'Cannot save book without a valid ISBN.'}), 400
+
     try:
         shelf.put_item(
             Item={
-                'BookID': data['ISBN'],
+                'BookID': data['BookID'],  # Ensure BookID is ISBN
                 'Title': data['Title'],
                 'Author': data['Author'],
-                'PageCount': data['PageCount'],
-                # Remove description from being saved
+                'PageCount': data['PageCount']
             }
         )
         return jsonify({'message': 'Book saved successfully!'}), 201
