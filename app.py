@@ -36,7 +36,7 @@ def search():
         # Make a request to the Google Books API
         google_books_api_url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={google_books_api_key}"
         response = requests.get(google_books_api_url)
-        response.raise_for_status()  # Raise an error for bad status codes
+        response.raise_for_status()
         data = response.json()
         return jsonify(data)  # Return Google Books API data as JSON to frontend
     except ClientError as e:
@@ -54,10 +54,12 @@ def save_book():
     author = book_data.get("author", "Unknown Author")
     page_count = book_data.get("page_count", 0)
     isbn = book_data.get("isbn", "N/A")
+    description = book_data.get("description", "No description available")
 
-    result = shelf.save_book(book_id, title, author, page_count, isbn)
+    result = shelf.save_book(book_id, title, author, page_count, isbn, description)
     return jsonify(result)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)  # Ensuring it runs on port 8080
+
 
