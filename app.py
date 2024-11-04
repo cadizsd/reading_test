@@ -54,7 +54,6 @@ def save_book():
     author = book_data.get("author", "Unknown Author")
     page_count = book_data.get("page_count", 0)
     isbn = book_data.get("isbn", "N/A")
-    description = book_data.get("description", "No description available")
 
     result = shelf.save_book(book_id, title, author, page_count, isbn, description)
     return jsonify(result)
